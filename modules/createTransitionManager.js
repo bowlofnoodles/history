@@ -1,5 +1,6 @@
 import warning from 'tiny-warning';
 
+// 这里其实就是个发布订阅
 function createTransitionManager() {
   let prompt = null;
 
@@ -48,6 +49,7 @@ function createTransitionManager() {
 
   let listeners = [];
 
+  // 订阅 新增listeners
   function appendListener(fn) {
     let isActive = true;
 
@@ -63,7 +65,9 @@ function createTransitionManager() {
     };
   }
 
+  // 通知 拿出listeners 循环执行
   function notifyListeners(...args) {
+    // 通知listener 执行
     listeners.forEach(listener => listener(...args));
   }
 

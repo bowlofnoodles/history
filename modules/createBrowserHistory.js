@@ -35,13 +35,16 @@ function getHistoryState() {
  * Creates a history object that uses the HTML5 history API including
  * pushState, replaceState, and the popstate event.
  */
+// 简单的说就是对html5 history的API做上层封装
 function createBrowserHistory(props = {}) {
   invariant(canUseDOM, 'Browser history needs a DOM');
 
   const globalHistory = window.history;
+  // 判断兼容性
   const canUseHistory = supportsHistory();
   const needsHashChangeListener = !supportsPopStateOnHashChange();
 
+  // 选项
   const {
     forceRefresh = false,
     getUserConfirmation = getConfirmation,
@@ -152,6 +155,7 @@ function createBrowserHistory(props = {}) {
     return basename + createPath(location);
   }
 
+  // 对history的pushState做了和发布订阅结合上层封装
   function push(path, state) {
     warning(
       !(
@@ -205,6 +209,7 @@ function createBrowserHistory(props = {}) {
     );
   }
 
+  // 对history的replaceState做了和发布订阅结合上层封装
   function replace(path, state) {
     warning(
       !(
@@ -270,15 +275,17 @@ function createBrowserHistory(props = {}) {
   function checkDOMListeners(delta) {
     listenerCount += delta;
 
-    if (listenerCount === 1 && delta === 1) {
+    // 当前已经有listener 代表已经监听过了 为了不重复监听
+    if (listenerCount === 1 && delta === 1) { //
       window.addEventListener(PopStateEvent, handlePopState);
 
-      if (needsHashChangeListener)
+      if (needsHashChangeListener) // 不支持popstate事件 那就用hashchange做降级
         window.addEventListener(HashChangeEvent, handleHashChange);
+      // 事件监听数为0了，移除事件监听
     } else if (listenerCount === 0) {
       window.removeEventListener(PopStateEvent, handlePopState);
-
-      if (needsHashChangeListener)
+      
+      if (needsHashChangeListener) // 不支持popstate事件 那就用hashchange做降级
         window.removeEventListener(HashChangeEvent, handleHashChange);
     }
   }
@@ -303,10 +310,12 @@ function createBrowserHistory(props = {}) {
     };
   }
 
+  // 会跟发布订阅的在一起transitionManager 以及 监听和移除popstate或者hashchange事件
   function listen(listener) {
     const unlisten = transitionManager.appendListener(listener);
     checkDOMListeners(1);
 
+    // 返回个清除的函数 这里可以有个启发 现在很多这种监听都会返回一个清理函数 以后可以借鉴 mobx的reaction也是
     return () => {
       checkDOMListeners(-1);
       unlisten();
@@ -320,10 +329,14 @@ function createBrowserHistory(props = {}) {
     createHref,
     push,
     replace,
+    // 原生的window.history.go方法
     go,
+    // go(-1)
     goBack,
+    // go(1)
     goForward,
     block,
+    // 监听方法
     listen
   };
 
