@@ -75,6 +75,7 @@ function createBrowserHistory(props = {}) {
     return createLocation(path, state, key);
   }
 
+  // 产生一个keyLength长度的随机字符串
   function createKey() {
     return Math.random()
       .toString(36)
@@ -84,8 +85,10 @@ function createBrowserHistory(props = {}) {
   const transitionManager = createTransitionManager();
 
   function setState(nextState) {
+    // 跟history做合并替换值 nextState => {action, location}
     Object.assign(history, nextState);
     history.length = globalHistory.length;
+    // 通知订阅者
     transitionManager.notifyListeners(history.location, history.action);
   }
 
@@ -106,6 +109,7 @@ function createBrowserHistory(props = {}) {
       forceNextPop = false;
       setState();
     } else {
+      // action 是popstate
       const action = 'POP';
 
       transitionManager.confirmTransitionTo(
@@ -114,6 +118,7 @@ function createBrowserHistory(props = {}) {
         getUserConfirmation,
         ok => {
           if (ok) {
+            // 然后接着做setState通知listeners
             setState({ action, location });
           } else {
             revertPop(location);
@@ -168,8 +173,10 @@ function createBrowserHistory(props = {}) {
     );
 
     const action = 'PUSH';
+    // 做参数处理
     const location = createLocation(path, state, createKey(), history.location);
 
+    // 主要的，前面有说过这个方法一般就是直接调用了callback，也就是ok => {}
     transitionManager.confirmTransitionTo(
       location,
       action,
@@ -181,23 +188,33 @@ function createBrowserHistory(props = {}) {
         const { key, state } = location;
 
         if (canUseHistory) {
+          // 调用window.history api
           globalHistory.pushState({ key, state }, null, href);
 
+          // 是否强制刷新 默认都是false 一般单页面路由肯定都是false 我们不依赖于浏览器的刷新
           if (forceRefresh) {
             window.location.href = href;
           } else {
+            // 这里key的逻辑 其实就跟replace不一样 replace是替换 push是push
+            // 这里是正常的主逻辑
+            // 上一步location的 key 的 index
             const prevIndex = allKeys.indexOf(history.location.key);
+            // copy下来allKeys
             const nextKeys = allKeys.slice(
               0,
               prevIndex === -1 ? 0 : prevIndex + 1
             );
-
+            // push进去 这一步计算好的location
             nextKeys.push(location.key);
+            // 替换掉
             allKeys = nextKeys;
 
+            // 要触发订阅者的更新了 也就是listeners
             setState({ action, location });
           }
         } else {
+          // 如果不支持history api
+          // 那就直接默认刷新了
           warning(
             state === undefined,
             'Browser history cannot push state in browsers that do not support HTML5 history'
@@ -210,6 +227,7 @@ function createBrowserHistory(props = {}) {
   }
 
   // 对history的replaceState做了和发布订阅结合上层封装
+  // push方法基本一致 无非就是处理方法有些不一样 主逻辑都是一样的
   function replace(path, state) {
     warning(
       !(
@@ -222,8 +240,10 @@ function createBrowserHistory(props = {}) {
     );
 
     const action = 'REPLACE';
+    // 做参数处理
     const location = createLocation(path, state, createKey(), history.location);
 
+    // 主要的
     transitionManager.confirmTransitionTo(
       location,
       action,
@@ -258,14 +278,18 @@ function createBrowserHistory(props = {}) {
     );
   }
 
+  // 注意go方法不会触发订阅者 listen方法注册的更新 但是会触发注册的PoPStateEvent事件，即handlePopState
+  // **push和replace是不会触发popstate事件的**
   function go(n) {
     globalHistory.go(n);
   }
 
+  // go(-1)
   function goBack() {
     go(-1);
   }
 
+  // go(1)
   function goForward() {
     go(1);
   }

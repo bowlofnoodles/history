@@ -3,6 +3,9 @@ import valueEqual from 'value-equal';
 
 import { parsePath } from './PathUtils';
 
+/*
+  基于入参 做一些参数的从处理罢了 例如path可以是string 也可以是个对象等
+ */
 export function createLocation(path, state, key, currentLocation) {
   let location;
   if (typeof path === 'string') {

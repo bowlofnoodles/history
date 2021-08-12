@@ -1,6 +1,6 @@
 import warning from 'tiny-warning';
 
-// 这里其实就是个发布订阅
+// 这里其实就是个发布订阅的管理器
 function createTransitionManager() {
   let prompt = null;
 
@@ -14,6 +14,10 @@ function createTransitionManager() {
     };
   }
 
+  // ？？一般这个方法就是直接调用了callback(true)
+  // 这里只有外界调了block方法也就是调了setPrompt才会变成非null
+  // setPrompt就是多了个操作前的动作切面
+  // 正常的话就都是直接调用了callback(true)
   function confirmTransitionTo(
     location,
     action,
@@ -22,7 +26,9 @@ function createTransitionManager() {
   ) {
     // TODO: If another transition starts while we're still confirming
     // the previous one, we may end up in a weird state. Figure out the
-    // best way to handle this.
+    // best way to handle this
+    // 这里只有外界调了block方法也就是调了setPrompt才会变成非null
+    // setPrompt就是多了个操作前的动作切面
     if (prompt != null) {
       const result =
         typeof prompt === 'function' ? prompt(location, action) : prompt;
@@ -43,6 +49,8 @@ function createTransitionManager() {
         callback(result !== false);
       }
     } else {
+      // 基本正常使用都是进来这个代码分支
+      // ok => {}
       callback(true);
     }
   }
@@ -65,7 +73,7 @@ function createTransitionManager() {
     };
   }
 
-  // 通知 拿出listeners 循环执行
+  // 通知 拿出listeners 透传参数执行 循环执行 (location, action: string)
   function notifyListeners(...args) {
     // 通知listener 执行
     listeners.forEach(listener => listener(...args));

@@ -43,10 +43,12 @@ function getHashPath() {
   return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
 }
 
+// push底层调用 window.location.hash
 function pushHashPath(path) {
   window.location.hash = path;
 }
 
+// replace 底层调用 window.location.replace
 function replaceHashPath(path) {
   const hashIndex = window.location.href.indexOf('#');
   window.location.replace(
@@ -54,6 +56,7 @@ function replaceHashPath(path) {
   );
 }
 
+// 与createBrowserHistory基本流程都一致，就是push replace底层调用的方法不一样了以及监听popstate变成监听hashchange了
 function createHashHistory(props = {}) {
   invariant(canUseDOM, 'Hash history needs a DOM');
 
@@ -296,8 +299,10 @@ function createHashHistory(props = {}) {
     listenerCount += delta;
 
     if (listenerCount === 1 && delta === 1) {
+      // hash模式监听的是hashchange事件
       window.addEventListener(HashChangeEvent, handleHashChange);
     } else if (listenerCount === 0) {
+      // hash模式监听的是hashchange事件
       window.removeEventListener(HashChangeEvent, handleHashChange);
     }
   }

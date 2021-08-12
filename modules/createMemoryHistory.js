@@ -11,6 +11,8 @@ function clamp(n, lowerBound, upperBound) {
 /**
  * Creates a history object that stores locations in memory.
  */
+// 与createBrowserHistory的主逻辑也基本一致 就是这是用在非浏览器环境 也就是没有了window.history对象
+// 所以自己维护一个history内存对象 做存储必要信息
 function createMemoryHistory(props = {}) {
   const {
     getUserConfirmation,
